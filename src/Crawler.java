@@ -4,8 +4,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.URL;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -26,6 +26,7 @@ public class Crawler
     public MySQLAbstraction db;
 
     public ConcurrentLinkedQueue<String> URLList;
+    public ConcurrentHashMap<String, String> wordList;
     public ConcurrentHashMap<String, String>  alreadyAddedURLs;
 
     public Crawler(int maxURLs, String domain, ConcurrentLinkedQueue<String> URLList, MySQLAbstraction db)
@@ -38,6 +39,8 @@ public class Crawler
 
         this.URLList = new ConcurrentLinkedQueue<>();
         this.alreadyAddedURLs = new ConcurrentHashMap<>();
+        this.wordList = new ConcurrentHashMap<>();
+
         while(!URLList.isEmpty())
         {
             this.addURLToQueue(URLList.poll());
@@ -58,6 +61,8 @@ public class Crawler
             System.out.println("body count: " + this.bodyCount);
             this.db.batchInsertURLsFinish();
 
+            this.addWordsToDatabase();
+
         }
         catch (Exception e)
         {
@@ -74,6 +79,7 @@ public class Crawler
             Document doc = Jsoup.connect(urlStr).get();
 
             Elements links = doc.select("a[href]");
+            Elements words = doc.select("p");
 
             //Body?
             //System.out.println(doc.body().text());
@@ -85,16 +91,8 @@ public class Crawler
             {
                 String link = element.attr("abs:href");
 
-                try
-                {
-                    if (Utils.getDomainName(link).equals(this.domain))
-                    {
-                        //this.db.insertURLtoURLTable(link, );
-                        this.addURLToQueue(link);
-                    }
-                } catch (Exception e) {
-                    //System.out.println("invalid URL: " + link +", skipping");
-                }
+                this.addURLToQueue(link);
+
                 //System.out.println(link);
             }
 
@@ -102,28 +100,56 @@ public class Crawler
             //this.db.insertURLtoURLTable(urlStr, doc.body().text().substring(0, 1000));
             if(this.bodyCount <= this.maxURLs)
             {
-                this.db.addToBatchURL(urlStr, doc.body().text().substring(0,100));
+                //add links
+                this.db.batchInsertURLs(urlStr, doc.body().text().substring(0, 100));
                 this.bodyCount++;
-                System.out.println("adding to db: " + this.bodyCount);
+                System.out.println("adding to db: " + this.bodyCount + " link: " + urlStr);
+
+                //store words
+                StringBuilder builder = new StringBuilder();
+                for(Element element: words)
+                {
+                    builder.append(element.text().toString());
+                }
+                this.wordList.put(urlStr, builder.toString());
             }
         }
         catch (Exception e)
         {
             //System.out.println("Error fetching page, skipping");
             //Mostly 404 page not found
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
     public void addURLToQueue(String url)
     {
-        if(!this.alreadyAddedURLs.containsKey(url))
+        if(!this.alreadyAddedURLs.containsKey(url)  && Utils.getDomainName(url).equals(this.domain))
         {
             //System.out.println(this.alreadyAddedURLs.get(url));
             this.URLList.add(url);
             this.currentURLs++;
             //System.out.println(url);
         }
+
         this.alreadyAddedURLs.put(url, "");
+    }
+
+    public void addWordsToDatabase() throws IOException, SQLException {
+        this.db.batchInsertWordsStart();
+        for(Map.Entry<String, String> pair: this.wordList.entrySet())
+        {
+            int urlid = this.db.getURLID(pair.getKey());
+
+            String[] splitWords = pair.getValue().split("[\\W]");
+            for(String word: splitWords)
+            {
+                this.db.batchInsertWords(urlid, word);
+                System.out.println("adding word: " + word);
+
+            }
+            //System.out.println("adding word...");
+        }
+        this.db.batchInsertWordsFinish();
     }
 }

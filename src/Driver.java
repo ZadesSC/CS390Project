@@ -87,13 +87,12 @@ public class Driver
 
             if(this.domain == null)
             {
-                try {
-                    this.domain = Utils.getDomainName(que.peek());
-                }
-                catch (URISyntaxException e)
+                this.domain = Utils.getDomainName(que.peek());
+
+                if(this.domain.equals(""))
                 {
-                    System.out.println("You fucked up");
-                    e.printStackTrace();
+                    System.out.println("Invalid url for domain");
+                    System.exit(-1);
                 }
             }
         }
@@ -124,7 +123,14 @@ public class Driver
     }
 
     public static void main(String[] args)
+
     {
+        long startTime = System.currentTimeMillis();
+        //Program--
         Driver driver = new Driver(args);
+        //Program --
+        long endTime   = System.currentTimeMillis();
+        long totalTime = endTime - startTime;
+        System.out.println(totalTime);
     }
 }
