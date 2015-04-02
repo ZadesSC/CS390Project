@@ -1,9 +1,10 @@
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 
 /**
  * Main class for manager the web crawler
@@ -14,70 +15,64 @@ public class Crawler
     public int maxURLs;
     public String domain;
 
-    public ArrayList<String> URLList;
-    public ArrayList<String> scannedURLList;
+    public MySQLAbstraction db;
 
-    public Crawler(int maxURLs, String domain, ArrayList<String> URLList)
+    public ConcurrentLinkedQueue<String> URLList;
+
+    public Crawler(int maxURLs, String domain, ConcurrentLinkedQueue<String> URLList, MySQLAbstraction db)
     {
         this.maxURLs = maxURLs;
         this.domain = domain;
         this.URLList = URLList;
+
+        this.db = db;
     }
     public void start()
     {
-
+        while (!this.URLList.isEmpty())
+        {
+            this.fetchURL(this.URLList.poll());
+        }
+        System.out.println(this.URLList.size());
     }
 
     public void fetchURL(String urlStr)
     {
+
         try
         {
-            URL url = new URL(urlStr);
+            Document doc = Jsoup.connect(urlStr).get();
 
-            System.out.println("Scanning " + urlStr + " url.path=" + url.getPath());
+            Elements links = doc.select("a[href]");
 
-            //read in url
-            InputStreamReader inputReader = new InputStreamReader(url.openStream());
+            //Body?
+            //System.out.println(doc.body().text());
 
-            //read contents into string builder
-            StringBuilder builder = new StringBuilder();
-            int ch;
-            while ((ch = inputReader.read()) != -1)
+            //Links
+            for(Element element: links)
             {
-                builder.append((char) ch);
+                String link = element.attr("abs:href");
+
+                try
+                {
+                    if(Utils.getDomainName(link).equals(this.domain))
+                    {
+                        //this.db.insertURLtoURLTable(link, );
+                        this.URLList.add(link);
+                    }
+                }
+                catch(Exception e)
+                {
+                    System.out.println("invalid URL: " + link +", skipping");
+                }
+                //System.out.println(link);
             }
-
-            //prints out html document to check if it works
-            //System.out.println("Printing HTML:");
-            //System.out.println(builder.toString());
-
-            //find tags in html document
-            String patternString =  "<a\\s+href\\s*=\\s*(\"[^\"]*\"|[^\\s>]*)\\s*>";
-
-            Pattern pattern =
-                    Pattern.compile(patternString,
-                            Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(builder);
-
-            while (matcher.find()) {
-                int start = matcher.start();
-                int end = matcher.end();
-                String match = builder.substring(start, end);
-                String urlFound = matcher.group(1);
-                System.out.println(urlFound);
-
-
-                // Check if it is already in the database
-
-                //System.out.println(match);
-            }
-
         }
         catch (Exception e)
         {
+            //System.out.println("Error fetching page, skipping");
+            //Mostly 404 page not found
             e.printStackTrace();
         }
-
-
     }
 }

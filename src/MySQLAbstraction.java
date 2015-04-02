@@ -31,7 +31,7 @@ public class MySQLAbstraction
         // Delete the table first if any
         try
         {
-            stat.executeUpdate("DROP TABLE " + this.URL_TABLE + "");
+            stat.executeUpdate("DROP TABLE " + this.URL_TABLE + ""); //If Exists???
             stat.executeUpdate("DROP TABLE " + this.WORD_TABLE + "");
         }
         catch (Exception e)
@@ -69,6 +69,11 @@ public class MySQLAbstraction
                         "FOREIGN KEY (URLID) REFERENCES " + this.URL_TABLE + "(URLID)"                                                                                   +
                 ")"
         );
+    }
+
+    public void insertURLtoURLTable(String url, String urlDescription)
+    {
+
     }
 
 }
