@@ -50,7 +50,7 @@ public class MySQLAbstraction
         stat.executeUpdate(
                 "CREATE TABLE " + this.URL_TABLE                                                            +
                 "("                                                                                         +
-                        "URLID INT PRIMARY KEY NOT NULL,"                                                   +
+                        "URLID INT PRIMARY KEY NOT NULL AUTO_INCREMENT,"                                                   +
                         "URL VARCHAR(512),"                                                                 +
                         "Description VARCHAR(200)"                                                          +
                 ")"

@@ -1,6 +1,8 @@
 import org.apache.commons.cli.*;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -95,7 +97,7 @@ public class Driver
                 }
             }
         }
-        catch (ParseException e)
+        catch (Exception e)
         {
             e.printStackTrace();
             System.exit(-1);
@@ -104,9 +106,19 @@ public class Driver
 
 
         this.db = new MySQLAbstraction();
+        try
+        {
+            this.db.openConnection();
+            this.db.resetDatabase();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
         this.crawler = new Crawler(this.maxURL, this.domain, this.que, db);
 
-        //this.db.resetDatabase();
         this.crawler.start();
         //this.crawler.fetchURL("http://www.purdue.edu");
     }
