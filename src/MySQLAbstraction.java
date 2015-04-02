@@ -15,7 +15,7 @@ public class MySQLAbstraction {
     public static final String WORD_TABLE = "word_table";
 
     public PreparedStatement batchURLStatement;
-    public Statement batchWordStatement;
+    public PreparedStatement batchWordStatement;
 
     public int count = 0;
 
@@ -159,14 +159,21 @@ public class MySQLAbstraction {
     }
 
     public void batchInsertWordsStart() throws IOException, SQLException {
+
+        String sqlStatement = "INSERT INTO word_table (URLID, Word) VALUES (?,?)";
+
         this.openConnection();
-        this.batchWordStatement = connection.createStatement();
+        this.batchWordStatement = connection.prepareStatement(sqlStatement);
     }
 
     public void batchInsertWords(int urlid, String word) throws SQLException {
-        this.batchWordStatement.addBatch(
-                "INSERT INTO " + this.WORD_TABLE + " (URLID, Word)\n" +
-                        "VALUES ( \"" + urlid + "\", \"" + word + "\" )");
+
+        this.batchWordStatement.setInt(1, urlid);
+        this.batchWordStatement.setString(2, word);
+        this.batchWordStatement.addBatch();
+//        this.batchWordStatement.addBatch(
+//                "INSERT INTO " + this.WORD_TABLE + " (URLID, Word)\n" +
+//                        "VALUES ( \"" + urlid + "\", \"" + word + "\" )");
         this.count++;
 
     }

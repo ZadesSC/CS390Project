@@ -100,17 +100,18 @@ public class Crawler
             //this.db.insertURLtoURLTable(urlStr, doc.body().text().substring(0, 1000));
             if(this.bodyCount <= this.maxURLs)
             {
-                //add links
-                this.db.batchInsertURLs(urlStr, doc.body().text().substring(0, 100));
-                this.bodyCount++;
-                System.out.println("adding to db: " + this.bodyCount + " link: " + urlStr);
-
                 //store words
                 StringBuilder builder = new StringBuilder();
                 for(Element element: words)
                 {
                     builder.append(element.text().toString());
                 }
+
+                //add links, this comes after words so that the description can be extracted
+                this.db.batchInsertURLs(urlStr, builder.substring(0, 100));
+                this.bodyCount++;
+                System.out.println("adding to db: " + this.bodyCount + " link: " + urlStr);
+
                 this.wordList.put(urlStr, builder.toString());
             }
         }
@@ -144,6 +145,11 @@ public class Crawler
             String[] splitWords = pair.getValue().split("[\\W]");
             for(String word: splitWords)
             {
+                if(word.equals(""))
+                {
+                    break;
+                }
+
                 this.db.batchInsertWords(urlid, word);
                 System.out.println("adding word: " + word);
 
