@@ -8,9 +8,9 @@
     <case-sensitivity plain-identifiers="lower" quoted-identifiers="lower"/>
     <schema name="" catalog="cs390"/>
     <table name="url_table" schema="" catalog="cs390" type="TABLE">
-      <column name="URLID" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
-      <column name="URL" sqlType="VARCHAR" precision="1024" scale="0" nullable="false" jdbcType="12"/>
-      <column name="Description" sqlType="VARCHAR" precision="1024" scale="0" nullable="false" jdbcType="12"/>
+      <column name="URLID" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="URL" sqlType="VARCHAR" precision="512" scale="0" nullable="true" jdbcType="12"/>
+      <column name="Description" sqlType="VARCHAR" precision="200" scale="0" nullable="true" jdbcType="12"/>
       <primary-key name="PRIMARY" columns="URLID"/>
       <exported-key name="word_table_ibfk_1" table="word_table" schema="" catalog="cs390" columns="URLID"/>
     </table>

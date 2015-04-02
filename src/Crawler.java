@@ -3,7 +3,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -16,6 +18,9 @@ public class Crawler
 {
     public int maxURLs;
     public int currentURLs;
+    public int bodyCount = 0;
+    public boolean finishedFlag = false;
+
     public String domain;
 
     public MySQLAbstraction db;
@@ -33,19 +38,32 @@ public class Crawler
 
         this.URLList = new ConcurrentLinkedQueue<>();
         this.alreadyAddedURLs = new ConcurrentHashMap<>();
-        while(!URLList.isEmpty() && this.currentURLs <= this.maxURLs)
+        while(!URLList.isEmpty())
         {
             this.addURLToQueue(URLList.poll());
         }
     }
     public void start()
     {
-        while (!this.URLList.isEmpty() && this.currentURLs <= this.maxURLs)
+        try
         {
-            this.fetchURL(this.URLList.poll());
-            System.out.println(this.currentURLs);
+            this.db.batchInsertURLsStart();
+
+            while (!this.URLList.isEmpty() && this.bodyCount <= this.maxURLs)
+            {
+                this.fetchURL(this.URLList.poll());
+                //System.out.println("current URL: " + this.currentURLs);
+            }
+            System.out.println("Queue size: " + this.URLList.size());
+            System.out.println("body count: " + this.bodyCount);
+            this.db.batchInsertURLsFinish();
+
         }
-        System.out.println(this.URLList.size());
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            System.exit(-1);
+        }
     }
 
     public void fetchURL(String urlStr)
@@ -61,33 +79,39 @@ public class Crawler
             //System.out.println(doc.body().text());
 
             //Links
-            for(Element element: links)
+            //ignore getting links if we over the limit
+
+            for (Element element : links)
             {
                 String link = element.attr("abs:href");
 
                 try
                 {
-                    if(Utils.getDomainName(link).equals(this.domain))
+                    if (Utils.getDomainName(link).equals(this.domain))
                     {
                         //this.db.insertURLtoURLTable(link, );
                         this.addURLToQueue(link);
                     }
-                }
-                catch(Exception e)
-                {
+                } catch (Exception e) {
                     //System.out.println("invalid URL: " + link +", skipping");
                 }
                 //System.out.println(link);
             }
 
             //add to db
-            //this.db.insertURLtoURLTable();
+            //this.db.insertURLtoURLTable(urlStr, doc.body().text().substring(0, 1000));
+            if(this.bodyCount <= this.maxURLs)
+            {
+                this.db.addToBatchURL(urlStr, doc.body().text().substring(0,100));
+                this.bodyCount++;
+                System.out.println("adding to db: " + this.bodyCount);
+            }
         }
         catch (Exception e)
         {
             //System.out.println("Error fetching page, skipping");
             //Mostly 404 page not found
-            //e.printStackTrace();
+            e.printStackTrace();
         }
     }
 
