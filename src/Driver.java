@@ -8,11 +8,14 @@ public class Driver
 
     public Driver(String[] args)
     {
+        
+
         this.db = new MySQLAbstraction();
-        this.crawler = new Crawler(0, null, null);
+        this.crawler = new Crawler(0, "purdue.edu", null, db);
 
         //this.db.resetDatabase();
-
+        this.crawler.start();
+        //this.crawler.fetchURL("http://www.purdue.edu");
     }
 
     public static void main(String[] args)

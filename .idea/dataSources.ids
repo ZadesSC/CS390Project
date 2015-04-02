@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source name="MySQL - CS390@localhost" uuid="b302847f-b472-4945-bc85-7098589528c3">
+    <database-info product="MySQL" version="5.6.23-log" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.34 ( Revision: jess.balint@oracle.com-20141014163213-wqbwpf1ok2kvo1om )">
+      <extra-name-characters>#@</extra-name-characters>
+      <identifier-quote-string>`</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="lower" quoted-identifiers="lower"/>
+    <schema name="" catalog="cs390"/>
+    <table name="url_table" schema="" catalog="cs390" type="TABLE">
+      <column name="URLID" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="URL" sqlType="VARCHAR" precision="1024" scale="0" nullable="false" jdbcType="12"/>
+      <column name="Description" sqlType="VARCHAR" precision="1024" scale="0" nullable="false" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="URLID"/>
+      <exported-key name="word_table_ibfk_1" table="word_table" schema="" catalog="cs390" columns="URLID"/>
+    </table>
+    <table name="word_table" schema="" catalog="cs390" type="TABLE">
+      <column name="Word" sqlType="VARCHAR" precision="255" scale="0" nullable="false" jdbcType="12"/>
+      <column name="URLID" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <foreign-key name="word_table_ibfk_1" columns="URLID" ref-table="url_table" ref-schema="" ref-catalog="cs390" ref-columns="URLID" update-rule="3" delete-rule="3" deferrability="2"/>
+    </table>
+  </data-source>
+</component>
