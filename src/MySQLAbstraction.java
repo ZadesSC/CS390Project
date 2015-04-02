@@ -127,7 +127,7 @@ public class MySQLAbstraction {
 
     public void batchInsertURLsStart() throws IOException, SQLException {
 
-        String sqlStatement = "INSERT INTO url_table (URL, Description)) VALUES (?,?)";
+        String sqlStatement = "INSERT INTO url_table (URL, Description) VALUES (?,?)";
 
         this.openConnection();
         this.batchURLStatement = connection.prepareStatement(sqlStatement);
