@@ -1,8 +1,8 @@
-import org.apache.commons.cli.*;
+package crawler;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.sql.SQLException;
+import org.apache.commons.cli.*;
+import utils.Utils;
+
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**

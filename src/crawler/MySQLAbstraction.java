@@ -1,3 +1,5 @@
+package crawler;
+
 import java.io.IOException;
 import java.sql.*;
 
@@ -59,8 +61,10 @@ public class MySQLAbstraction {
                 "CREATE TABLE " + this.URL_TABLE +
                         "(" +
                         "URLID INT PRIMARY KEY NOT NULL AUTO_INCREMENT," +
-                        "URL VARCHAR(512)," +
-                        "Description VARCHAR(200)" +
+                        "URL VARCHAR(1024)," +
+                        "Description VARCHAR(1024)," +
+                        "Image VARCHAR(1024)," +
+                        "Title VARCHAR (1024)" +
                         ")"
         );
         stat.close();
@@ -74,7 +78,7 @@ public class MySQLAbstraction {
                 "("                                                                                         +
                         "Word VARCHAR(255) NOT NULL,"                                                       +
                         "URLID INT NOT NULL,"                                                               +
-                        "FOREIGN KEY (URLID) REFERENCES " + this.URL_TABLE + "(URLID)"                                                                                   +
+                        "FOREIGN KEY (URLID) REFERENCES " + this.URL_TABLE + "(URLID)"                      +
                 ")"
         );
         stat.close();
@@ -127,18 +131,25 @@ public class MySQLAbstraction {
 
     public void batchInsertURLsStart() throws IOException, SQLException {
 
-        String sqlStatement = "INSERT INTO url_table (URL, Description) VALUES (?,?)";
+        String sqlStatement = "INSERT INTO url_table (URL, Description, Image, Title) VALUES (?,?,?,?)";
 
         this.openConnection();
         this.batchURLStatement = connection.prepareStatement(sqlStatement);
     }
 
-    public void batchInsertURLs(String url, String urlDescription) throws SQLException {
+    public void batchInsertURLs(String url, String urlDescription, String image, String title) throws SQLException {
 
 
         this.batchURLStatement.setString(1, url);
-        this.batchURLStatement.setString(2, urlDescription);
+        this.batchURLStatement.setString(2, urlDescription.replaceAll("[^\\p{L}\\p{Nd}]+", " "));
+        this.batchURLStatement.setString(3, image);
+        this.batchURLStatement.setString(4, title);
         this.batchURLStatement.addBatch();
+
+        if(this.count%500 ==0)
+        {
+            this.batchURLStatement.executeBatch();
+        }
 
 //        this.batchURLStatement.addBatch(
 //                "INSERT INTO " + this.URL_TABLE + " (URL, Description)\n" +

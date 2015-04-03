@@ -132,15 +132,15 @@ public class Crawler
                 }
 
                 //add links, this comes after words so that the description can be extracted
-                this.db.batchInsertURLs(urlStr, builder.substring(0, 100));
+                this.db.batchInsertURLs(urlStr, builder.substring(0, 100), image, title);
                 this.bodyCount++;
                 System.out.println("adding to db: " + this.bodyCount + " link: " + urlStr + " with text: " + builder.substring(0, 100) + ", " + image + ", " + title + ")");
 
-                writer.write("INSERT INTO url_table (URL, Description, Image, Title) VALUES ( " + urlStr + ", " + builder.substring(0, 100) + ", " + image + ", " + title + ");\n\n");
+                writer.write("INSERT INTO url_table (URL, Description, Image, Title) VALUES ( \"" + urlStr + "\", \"" + builder.substring(0, 100) + "\", \"" + image + "\", \"" + title + "\");\n\n");
 
                 this.wordList.put(urlStr, builder.toString());
 
-                wordWriter.write(urlStr + " " + builder.toString() + "\n\n");
+                wordWriter.write(urlStr + "\n" + builder.toString() + "\n\n");
             }
         }
         catch (Exception e)
