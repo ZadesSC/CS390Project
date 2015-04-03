@@ -1,9 +1,13 @@
+package crawler;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import utils.Utils;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +33,9 @@ public class Crawler
     public ConcurrentHashMap<String, String> wordList;
     public ConcurrentHashMap<String, String>  alreadyAddedURLs;
 
+    PrintWriter writer;
+    PrintWriter wordWriter;
+
     public Crawler(int maxURLs, String domain, ConcurrentLinkedQueue<String> URLList, MySQLAbstraction db)
     {
         this.currentURLs = 0;
@@ -41,6 +48,7 @@ public class Crawler
         this.alreadyAddedURLs = new ConcurrentHashMap<>();
         this.wordList = new ConcurrentHashMap<>();
 
+
         while(!URLList.isEmpty())
         {
             this.addURLToQueue(URLList.poll());
@@ -51,6 +59,9 @@ public class Crawler
         try
         {
             this.db.batchInsertURLsStart();
+
+            writer = new PrintWriter("the-file-name.txt", "UTF-8");
+            wordWriter = new PrintWriter("wordFile.txt", "UTF-8");
 
             while (!this.URLList.isEmpty() && this.bodyCount <= this.maxURLs)
             {
@@ -80,7 +91,20 @@ public class Crawler
 
             Elements links = doc.select("a[href]");
             Elements words = doc.select("p");
+            Elements images = doc.select("img");
+            String title = doc.title();
 
+            String image = "";
+            for(Element element: images)
+            {
+                //for each element get the srs url
+                image = element.absUrl("src");
+
+
+                //System.out.println("Image Found!");
+                //System.out.println("src attribute is : "+src);
+
+            }
             //Body?
             //System.out.println(doc.body().text());
 
@@ -110,9 +134,13 @@ public class Crawler
                 //add links, this comes after words so that the description can be extracted
                 this.db.batchInsertURLs(urlStr, builder.substring(0, 100));
                 this.bodyCount++;
-                System.out.println("adding to db: " + this.bodyCount + " link: " + urlStr);
+                System.out.println("adding to db: " + this.bodyCount + " link: " + urlStr + " with text: " + builder.substring(0, 100) + ", " + image + ", " + title + ")");
+
+                writer.write("INSERT INTO url_table (URL, Description, Image, Title) VALUES ( " + urlStr + ", " + builder.substring(0, 100) + ", " + image + ", " + title + ");\n\n");
 
                 this.wordList.put(urlStr, builder.toString());
+
+                wordWriter.write(urlStr + " " + builder.toString() + "\n\n");
             }
         }
         catch (Exception e)
