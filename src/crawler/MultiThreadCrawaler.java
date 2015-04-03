@@ -3,10 +3,7 @@ package crawler;
 import utils.Utils;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Created by Darren on 4/3/2015.
@@ -15,45 +12,51 @@ public class MultiThreadCrawaler
 {
     public int maxURLs;
     public int currentURLS;
+    public int currentSQLs;
 
     public String domain;
 
-    public MultiThreadMySQL db;
+    //Database stuff
+    public String databaseURL = "jdbc:mysql://localhost:3306/CS390";
+    public String username = "student";
+    public String password = "cs390";
 
-    public ConcurrentLinkedQueue<URLData> URLsToBeAddedToSQLList;
-    public ConcurrentLinkedQueue<String> URLsToBeScannedList;
+    public LinkedBlockingQueue<URLData> URLsToBeAddedToSQLList;
+    public LinkedBlockingQueue<Runnable> URLsToBeScannedList;
 
     public ConcurrentHashMap<String, String> alreadyScannedURLS;
 
-    public int threadCount = 10;
+    public int crawlerThreadCount = 20;
+    public int SQLThreadcount = 10;
     public Executor crawlerExecutor;
+    public Executor SQLExecutor;
     public ArrayList<Runnable> threads;
 
-    public MultiThreadCrawaler(int maxURLs, String domain, ConcurrentLinkedQueue<String> URLList, MultiThreadMySQL db)
+    public MultiThreadCrawaler(int maxURLs, String domain, ConcurrentLinkedQueue<String> URLList)
     {
-        //init scturues
-        this.URLsToBeAddedToSQLList = new ConcurrentLinkedQueue<>();
-        this.URLsToBeScannedList = new ConcurrentLinkedQueue<>();
+        //init structures
+        this.URLsToBeAddedToSQLList = new LinkedBlockingQueue<>();
+        this.URLsToBeScannedList = new LinkedBlockingQueue<>();
         this.alreadyScannedURLS = new ConcurrentHashMap<>();
-        this.threads = new ArrayList<>(this.threadCount);
+        this.threads = new ArrayList<>(this.crawlerThreadCount);
+
+        //start executor
+        this.crawlerExecutor = Executors.newFixedThreadPool(this.crawlerThreadCount);
+        this.SQLExecutor = Executors.newFixedThreadPool(this.SQLThreadcount);
+        for(int x = 0; x < this.SQLThreadcount; x++)
+        {
+            this.SQLExecutor.execute(new SQLThread(this));
+        }
 
         this.maxURLs = maxURLs;
+        this.currentURLS = 0;
+        this.currentSQLs = 0;
         this.domain = domain;
-        this.db = db;
 
         //add urls to list
         for(String url: URLList)
         {
             this.addToScanList(url);
-        }
-
-        //start executor
-        this.crawlerExecutor = Executors.newFixedThreadPool(this.threadCount);
-        for(int x = 0; x < this.threadCount; x++)
-        {
-            Runnable crawlerSlave= new CrawlerThread(this);
-            threads.add(crawlerSlave);
-            this.crawlerExecutor.execute(crawlerSlave);
         }
     }
 
@@ -64,7 +67,7 @@ public class MultiThreadCrawaler
         {
             if(Utils.getDomainName(url).equals(this.domain))
             {
-                this.URLsToBeScannedList.add(url);
+                this.crawlerExecutor.execute(new CrawlerThread(this, url));
             }
             this.alreadyScannedURLS.put(url, "");
         }

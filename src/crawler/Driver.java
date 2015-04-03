@@ -104,26 +104,28 @@ public class Driver
 
 
 
-        this.db = new MySQLAbstraction();
-        try
-        {
-            this.db.openConnection();
-            this.db.resetDatabase();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+//        this.db = new MySQLAbstraction();
+//        try
+//        {
+//            this.db.openConnection();
+//            this.db.resetDatabase();
+//        }
+//        catch (Exception e)
+//        {
+//            e.printStackTrace();
+//            System.exit(-1);
+//        }
 
-        this.crawler = new Crawler(this.maxURL, this.domain, this.que, db);
+        //this.crawler = new Crawler(this.maxURL, this.domain, this.que, db);
 
-        this.crawler.start();
+        //this.crawler.start();
         //this.crawler.fetchURL("http://www.purdue.edu");
+
+
+        MultiThreadCrawaler mCrawler = new MultiThreadCrawaler(this.maxURL,this.domain,this.que);
     }
 
     public static void main(String[] args)
-
     {
         long startTime = System.currentTimeMillis();
         //Program--
