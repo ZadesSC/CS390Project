@@ -76,7 +76,7 @@ public class CrawlerThread implements Runnable
             //this.crawler.SQLExecutor.execute(new SQLThread(this.crawler, urlData));
             this.crawler.URLsToBeAddedToSQLList.add(urlData);
             this.crawler.currentURLS++;
-            System.out.println("Current URLS: " + this.crawler.currentURLS);
+            System.out.println("List Size: " + this.crawler.URLsToBeAddedToSQLList.size() + " Current URLS: " + this.crawler.currentURLS);
 
             //crawl for links
             for (Element element : links)
@@ -97,8 +97,8 @@ public class CrawlerThread implements Runnable
         String previousValue = this.crawler.alreadyScannedURLS.putIfAbsent(link, "");
 
         //have not yet been scanned
-        if(this.crawler.currentURLS <= this.crawler.maxURLs)
-        {
+        //if(this.crawler.currentURLS <= this.crawler.maxURLs)
+        //{
             if (previousValue == null)
             {
                 if (Utils.getDomainName(link).equals(this.crawler.domain)) {
@@ -106,6 +106,6 @@ public class CrawlerThread implements Runnable
                 }
                 this.crawler.alreadyScannedURLS.put(link, "");
             }
-        }
+        //}
     }
 }

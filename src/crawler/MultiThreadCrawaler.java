@@ -21,13 +21,13 @@ public class MultiThreadCrawaler
     public String username = "student";
     public String password = "cs390";
 
-    public LinkedBlockingQueue<URLData> URLsToBeAddedToSQLList;
+    public ConcurrentLinkedQueue<URLData> URLsToBeAddedToSQLList;
     public LinkedBlockingQueue<Runnable> URLsToBeScannedList;
 
     public ConcurrentHashMap<String, String> alreadyScannedURLS;
 
     public int crawlerThreadCount = 20;
-    public int SQLThreadcount = 10;
+    public int SQLThreadcount = 26;
     public Executor crawlerExecutor;
     public Executor SQLExecutor;
     public ArrayList<Runnable> threads;
@@ -35,7 +35,7 @@ public class MultiThreadCrawaler
     public MultiThreadCrawaler(int maxURLs, String domain, ConcurrentLinkedQueue<String> URLList)
     {
         //init structures
-        this.URLsToBeAddedToSQLList = new LinkedBlockingQueue<>();
+        this.URLsToBeAddedToSQLList = new ConcurrentLinkedQueue<>();
         this.URLsToBeScannedList = new LinkedBlockingQueue<>();
         this.alreadyScannedURLS = new ConcurrentHashMap<>();
         this.threads = new ArrayList<>(this.crawlerThreadCount);

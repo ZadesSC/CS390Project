@@ -32,26 +32,18 @@ public class SQLThread implements Runnable {
     {
         try
         {
-            while(true)
-            {
-                if(!this.crawler.URLsToBeAddedToSQLList.isEmpty())
-                {
-                    this.addBatchDataToDB(this.crawler.URLsToBeAddedToSQLList);
-                }
-                else
-                {
-                    java.lang.Thread.sleep(1000);
-                }
-            }
+
+            this.addBatchDataToDB(this.crawler.URLsToBeAddedToSQLList);
+
         }
-        catch (InterruptedException e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
     }
 
     //Forbatch
-    public void addBatchDataToDB(LinkedBlockingQueue<URLData> dataList)
+    public void addBatchDataToDB(ConcurrentLinkedQueue<URLData> dataList)
     {
         try
         {
@@ -64,13 +56,16 @@ public class SQLThread implements Runnable {
             PreparedStatement URLPStatement = this.connection.prepareStatement(URLStatement);
             PreparedStatement wordPStatement = this.connection.prepareStatement(wordStatement);
 
-            for(int x = 0; x < 100; x ++)
-            {
-                URLData data = this.crawler.URLsToBeAddedToSQLList.poll();
-                if(data == null)
+            for (int x = 0; x < 500; x++) {
+                if(this.crawler.URLsToBeAddedToSQLList.isEmpty())
                 {
-                    x--;
-                    break;
+                    Thread.sleep(5000);
+                    continue;
+                }
+                URLData data = this.crawler.URLsToBeAddedToSQLList.poll();
+
+                if (data == null) {
+                    continue;
                 }
 
                 URLPStatement.setString(1, data.URL);
@@ -82,7 +77,7 @@ public class SQLThread implements Runnable {
                 //URLPStatement.execute();
 
                 this.crawler.currentSQLs++;
-                System.out.println("Current SQLs: " + this.crawler.currentSQLs);
+                System.out.println("List Size: " + this.crawler.URLsToBeAddedToSQLList.size() + " Current SQLs: " + this.crawler.currentSQLs);
 
                 for (String word : data.words) {
                     if (word != null && !word.equals("") && !word.equals(" ")) {
@@ -97,8 +92,12 @@ public class SQLThread implements Runnable {
             URLPStatement.executeBatch();
             wordPStatement.executeBatch();
             this.connection.close();
+            System.out.println("test");
+
+            this.crawler.SQLExecutor.execute(new SQLThread(this.crawler));
+
         }
-        catch (SQLException e)
+        catch (Exception e)
         {
             e.printStackTrace();
         }
@@ -114,7 +113,7 @@ public class SQLThread implements Runnable {
 
             //add shit to db
             String URLStatement = "INSERT INTO url_table_mt (URL, Description, Image, Title) VALUES (?,?,?,?)";
-            String wordStatement = "INSERT INTO word_table_mt (URLID, Word) SELECT url_table.URLID, ? FROM url_table WHERE url_table.URL = ?";
+            String wordStatement = "INSERT INTO word_table_mt (URLID, Word) SELECT word_table_mt.URLID, ? FROM word_table_mt WHERE word_table_mt.URL = ?";
 
             PreparedStatement URLPStatement = this.connection.prepareStatement(URLStatement);
             PreparedStatement wordPStatement = this.connection.prepareStatement(wordStatement);
